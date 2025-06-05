@@ -1,0 +1,15 @@
+{
+    "workbench.iconTheme": "a-file-icon-vscode",
+    "workbench.colorTheme": "One Dark Pro Mix",
+    "editor.rulers": [
+        80
+    ],
+    "cmake.configureOnOpen": true,
+    "cmake.generator": "Ninja",
+    "cmake.buildDirectory": "../builds/x86/Debug",
+    "cmake.clearOutputBeforeBuild": false,
+    "cmake.configureArgs": [
+        "-GNinja",
+    ],
+    "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
+}

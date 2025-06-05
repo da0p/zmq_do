@@ -1,0 +1,7 @@
+[requires]
+cppzmq/4.10.0
+spdlog/1.15.1
+
+[generators]
+CMakeDeps
+CMakeToolchain
