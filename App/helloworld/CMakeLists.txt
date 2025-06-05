@@ -1,8 +1,17 @@
 add_executable(HelloServer
-  main.cpp
+  server.cpp
 )
 
 target_link_libraries(HelloServer
+  spdlog::spdlog
+  cppzmq
+)
+
+add_executable(HelloClient
+  client.cpp
+)
+
+target_link_libraries(HelloClient
   spdlog::spdlog
   cppzmq
 )
