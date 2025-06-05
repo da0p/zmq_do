@@ -5,5 +5,12 @@
     },
     "include": [
         "../builds/x86/Debug/CMakePresets.json"
+    ],
+    "configurePresets": [
+        {
+            "name": "Default",
+            "displayName": "Default",
+            "generator": "Ninja"
+        }
     ]
 }
