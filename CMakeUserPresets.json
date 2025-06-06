@@ -10,7 +10,12 @@
         {
             "name": "Default",
             "displayName": "Default",
-            "generator": "Ninja"
+            "generator": "Ninja",
+            "binaryDir": "../builds/x86/Debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_INSTALL_PREFIX": "../builds/x86/Debug"
+            }
         }
     ]
 }

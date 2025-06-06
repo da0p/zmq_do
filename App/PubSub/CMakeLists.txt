@@ -5,6 +5,7 @@ add_executable(WeatherPublisher
 target_link_libraries(WeatherPublisher
   spdlog::spdlog
   cppzmq
+  RandomNumberGenerator
 )
 
 add_executable(WeatherSubscriber

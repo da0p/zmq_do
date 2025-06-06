@@ -1,7 +1,9 @@
-#include <random>
-#include <spdlog/spdlog.h>
 #include <thread>
+
+#include <spdlog/spdlog.h>
 #include <zmq.hpp>
+
+#include <RandomNumberGenerator.h>
 
 int main( int argc, char *argv[] ) {
 
@@ -9,15 +11,12 @@ int main( int argc, char *argv[] ) {
 	zmq::socket_t publisher{ zmqContex, zmq::socket_type::pub };
 	publisher.bind( "tcp://*:5556" );
 	publisher.bind( "ipc://weather.ipc" );
-
-	std::random_device device;
-	std::mt19937 random( device() );
-	std::uniform_int_distribution<std::mt19937::result_type> distrib( 10000, 10010 );
+	auto random = RandomNumberGenerator( 10000, 10010 );
 
 	while ( 1 ) {
-		auto zipCode = std::format( "{:{}d}", distrib( random ), 5 );
-		auto temperature = std::format( "{:{}.{}f}", static_cast<float>( distrib( random ) ) / 1000, 3, 1 );
-		auto humidity = std::format( "{:{}.{}f}", static_cast<float>( distrib( random ) ) / 1000, 3, 1 );
+		auto zipCode = std::format( "{:{}d}", random.generate(), 5 );
+		auto temperature = std::format( "{:{}.{}f}", static_cast<float>( random.generate() ) / 1000, 3, 1 );
+		auto humidity = std::format( "{:{}.{}f}", static_cast<float>( random.generate() ) / 1000, 3, 1 );
         std::string text;
 		std::format_to( std::back_inserter( text ), "{} {} {}", zipCode, temperature, humidity );
 		zmq::message_t notification{ text.length()};
