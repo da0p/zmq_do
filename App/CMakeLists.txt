@@ -1,2 +1,3 @@
 add_subdirectory(RequestReply)
 add_subdirectory(PubSub)
+add_subdirectory(Worker)
