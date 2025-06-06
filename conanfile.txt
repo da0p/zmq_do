@@ -1,7 +1,12 @@
 [requires]
+zeromq/4.3.5
 cppzmq/4.10.0
 spdlog/1.15.1
 
 [generators]
 CMakeDeps
 CMakeToolchain
+
+[options]
+zeromq/4.3.5:poller=epoll
+zeromq/4.3.5:with_draft_api=True
