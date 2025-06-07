@@ -4,6 +4,8 @@
     "editor.rulers": [
         80
     ],
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
     "cmake.configureOnOpen": true,
     "cmake.generator": "Ninja",
     "cmake.buildDirectory": "../builds/x86/Debug",
