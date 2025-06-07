@@ -26,3 +26,21 @@ target_link_libraries(ReqRepBroker
   cppzmq
   spdlog::spdlog
 )
+
+add_executable(MessageQueue
+  MessageQueue.cpp
+)
+
+target_link_libraries(MessageQueue
+  cppzmq
+  spdlog::spdlog
+)
+
+add_executable(PubSubProxy
+  PubSubProxy.cpp
+)
+
+target_link_libraries(PubSubProxy
+  cppzmq
+  spdlog::spdlog
+)
