@@ -27,7 +27,7 @@ asynchronous **REP** socket. Where we use a REQ socket, we can use a DEALER; we
 just have to read and write the envelope ourselves. Where we use a REP socket,
 we can stick a ROUTER; we just need to manage identities ourselves
 
-# Understanding Router Dealer Sockets
+# Understanding Router Sockets
 
 - **Identity** concept in ZeroMQ refers specifically to **ROUTER** sockets. The
   sockets use it to identify the connection to other sockets. If at the connection
@@ -38,3 +38,10 @@ we can stick a ROUTER; we just need to manage identities ourselves
   anywhere, so they drop them silently. If we don't want this feature, we can
   set _ZMQ\_ROUTER\_MANDATORY_ option, so that when there an unroutable identity
   on a send call, the socket will signal an _EHOSTUNREACH_ error
+
+# Understanding Dealer Sockets
+
+- **DEALER** socket does not send an empty delimiter frame before any data frames
+  as the **REQ** socket 
+- **DEALER** socket is fully asynchronous, it can send multiple request before
+  receiving a reply, not like **REQ** socket
