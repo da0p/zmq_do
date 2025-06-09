@@ -19,6 +19,8 @@ int main( int argc, char *argv[] ) {
 	// set the identity ourselves
 	zmq::socket_t identified{ ctx, zmq::socket_type::req };
 	identified.set( zmq::sockopt::routing_id, "PEERR" );
+	// Interesting here: even though the generated zmq identity contains only 5 bytes,
+	// we can use more than 5 bytes to set identity
 	identified.connect( "inproc://server" );
 	ZmqUtil::sendString( identified, "ROUTER socket uses REQ's socket identity" );
 	ZmqUtil::dump( router );

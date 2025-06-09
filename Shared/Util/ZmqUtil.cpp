@@ -38,7 +38,7 @@ namespace ZmqUtil {
 			} else {
 				auto out = std::format( "[{:<}]	", size.value() );
 				for ( size_t i = 0; i < size.value(); i++ ) {
-					out += std::format( "{0:x}", raw[ i ] );
+					out += std::format( "{0:2X}", static_cast<unsigned char>( raw[ i ] ) );
 				}
 				out += "\n";
 				std::cout << out;
