@@ -24,4 +24,5 @@ add_executable(TaskSink
 target_link_libraries(TaskSink
   spdlog::spdlog
   cppzmq
+  StopTimer
 )

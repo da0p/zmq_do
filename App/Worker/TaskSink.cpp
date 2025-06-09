@@ -4,21 +4,7 @@
 #include <spdlog/spdlog.h>
 #include <zmq.hpp>
 
-class Timer {
-  public:
-	Timer() = default;
-	void start() {
-		mStart = std::chrono::steady_clock::now();
-	}
-
-	[[nodiscard]] std::chrono::milliseconds getTimeElasped() {
-		auto duration = std::chrono::steady_clock::now() - mStart;
-		return std::chrono::duration_cast<std::chrono::milliseconds>( duration );
-	}
-
-  private:
-	std::chrono::steady_clock::time_point mStart;
-};
+#include <StopTimer.h>
 
 int main( int argc, char *argv[] ) {
 	zmq::context_t zmqContext;
@@ -29,7 +15,7 @@ int main( int argc, char *argv[] ) {
 	controller.bind( "tcp://*:5559" );
 
 	// wait for start event
-	Timer timer;
+	StopTimer timer;
 	zmq::message_t startEvent;
 	[[maybe_unused]] auto _ = zmqSink.recv( startEvent, zmq::recv_flags::none );
 	timer.start();
