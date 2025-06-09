@@ -1,12 +1,11 @@
 add_executable(ReqRepClient
   Client.cpp
-  ZmqUtil.h
-  ZmqUtil.cpp
 )
 
 target_link_libraries(ReqRepClient
   cppzmq
   spdlog::spdlog
+  ZmqUtil
 )
 
 add_executable(ReqRepWorker

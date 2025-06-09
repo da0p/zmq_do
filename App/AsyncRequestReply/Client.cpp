@@ -2,7 +2,7 @@
 #include <zmq.hpp>
 #include <zmq_addon.hpp>
 
-#include "ZmqUtil.h"
+#include <ZmqUtil.h>
 
 int main( int argc, char *argv[] ) {
 	zmq::context_t zmqContext;
