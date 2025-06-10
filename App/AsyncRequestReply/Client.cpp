@@ -12,7 +12,7 @@ int main( int argc, char *argv[] ) {
 	for ( auto i = 0; i < 10; i++ ) {
 		ZmqUtil::sendString( zmqRequester, "Hello" );
 		auto reply = ZmqUtil::recvString( zmqRequester );
-		spdlog::info( "Received reply: {}", reply );
+		spdlog::info( "Received reply: {}", reply.value() );
 	}
 
 	return 0;

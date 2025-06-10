@@ -20,7 +20,7 @@ void doWork( zmq::context_t &ctx ) {
 	while ( 1 ) {
 		ZmqUtil::sendString( worker, "ready" );
 		auto msg = ZmqUtil::recvString( worker );
-		if ( msg != "stop" ) {
+		if ( msg.value() != "stop" ) {
 			total++;
 		} else {
 			spdlog::info( "Processed work: {} tasks", total );
@@ -60,7 +60,7 @@ int main( int argc, char *argv[] ) {
 		_ = ZmqUtil::recvString( broker );
 
 		// We first put the identity so that ROUTER knows where to send
-		ZmqUtil::sendString( broker, identity, zmq::send_flags::sndmore );
+		ZmqUtil::sendString( broker, identity.value(), zmq::send_flags::sndmore );
 		// send an empty delimiter
 		ZmqUtil::sendString( broker, "", zmq::send_flags::sndmore );
 

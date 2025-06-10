@@ -2,6 +2,7 @@
 
 #include <format>
 #include <iostream>
+
 #include <zmq.hpp>
 
 namespace ZmqUtil {
@@ -11,10 +12,13 @@ namespace ZmqUtil {
 		socket.send( message, flag );
 	}
 
-	std::string recvString( zmq::socket_t &socket, zmq::recv_flags flag ) {
+	std::optional<std::string> recvString( zmq::socket_t &socket, zmq::recv_flags flag ) {
 		zmq::message_t message;
-		[[maybe_unused]] auto _ = socket.recv( message, flag );
-		return message.to_string();
+		auto rcv = socket.recv( message, flag );
+		if ( rcv >= 0 ) {
+			return message.to_string();
+		}
+		return {};
 	}
 
 	void dump( zmq::socket_t &socket ) {
