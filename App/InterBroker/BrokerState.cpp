@@ -11,8 +11,7 @@
 #include <ZmqUtil.h>
 
 BrokerState::BrokerState( zmq::context_t &ctx ) :
-        mStateBackend{ ctx, zmq::socket_type::pub },
-        mStateFrontend{ ctx, zmq::socket_type::sub } {
+        mStateBackend{ ctx, zmq::socket_type::pub }, mStateFrontend{ ctx, zmq::socket_type::sub } {
 }
 
 void BrokerState::setupSelf( std::string_view name ) {
@@ -29,38 +28,59 @@ void BrokerState::setupPeers( const std::vector<std::string> &peerNames ) {
 	}
 }
 
-void BrokerState::broadcastMyState() {
-	RandomNumberGenerator rnd{ 0, 10 };
-	ZmqUtil::sendString( mStateBackend, mMyId, zmq::send_flags::sndmore );
-	ZmqUtil::sendString( mStateBackend, std::to_string( rnd.generate() ) );
-	spdlog::info( "Broadcast my state...\n" );
+void BrokerState::addIdleWorker( std::string_view name ) {
+	mMyIdleWorkers.push( std::string( name ) );
 }
 
-void BrokerState::run() {
-	zmq::active_poller_t poller;
-	poller.add( mStateFrontend, zmq::event_flags::pollin, [ this ]( zmq::event_flags flag ) {
-		auto peerName = ZmqUtil::recvString( mStateFrontend );
-		auto idleWorkers = ZmqUtil::recvString( mStateFrontend );
-		if ( peerName.has_value() && idleWorkers.has_value() ) {
-			auto newIdleWorkers = std::stoi( idleWorkers.value() );
-			if ( mOtherIdleWorkers.contains( peerName.value() ) ) {
-				spdlog::info( "Updating [{}, {}] -> [{}, {}]",
-				              peerName.value(),
-				              mOtherIdleWorkers.at( peerName.value() ),
-				              peerName.value(),
-				              newIdleWorkers );
-			} else {
-				spdlog::info( "New subscription from [{}, {}]",
-				              peerName.value(),
-				              newIdleWorkers );
-			}
-			mOtherIdleWorkers[ peerName.value() ] = newIdleWorkers;
-		}
-	} );
+bool BrokerState::isLocalWorkerAvailable() {
+	return !mMyIdleWorkers.empty();
+}
 
-	while ( 1 ) {
-		if ( poller.wait( std::chrono::seconds( 1 ) ) == 0 ) {
-			broadcastMyState();
+std::string BrokerState::getLocalWorker() {
+	auto idleWorker = mMyIdleWorkers.front();
+	mMyIdleWorkers.pop();
+	return idleWorker;
+}
+
+bool BrokerState::isRemotePeerAvailable() {
+	return !mIdlePeers.empty();
+}
+
+std::string BrokerState::getRemotePeer() {
+	// always take the first one
+	auto it = mIdlePeers.begin();
+	auto idleWorker = it->first;
+	mIdlePeers.erase( it );
+	return idleWorker;
+}
+
+void BrokerState::broadcastMyState() {
+	ZmqUtil::sendString( mStateBackend, mMyId, zmq::send_flags::sndmore );
+	ZmqUtil::sendString( mStateBackend, std::to_string( mMyIdleWorkers.size() ) );
+}
+
+void BrokerState::add2Poller( zmq::active_poller_t &poller ) {
+	poller.add( mStateFrontend, zmq::event_flags::pollin, [ this ]( zmq::event_flags flag ) { handleStateUpdate(); } );
+}
+
+void BrokerState::handleStateUpdate() {
+	auto peerName = ZmqUtil::recvString( mStateFrontend );
+	auto idleWorkers = ZmqUtil::recvString( mStateFrontend );
+	if ( peerName.has_value() && idleWorkers.has_value() ) {
+		auto newIdleWorkers = std::stoi( idleWorkers.value() );
+		if ( mIdlePeers.contains( peerName.value() ) ) {
+			spdlog::debug(
+			  "Updating [{}, {}] -> [{}, {}]", peerName.value(), mIdlePeers.at( peerName.value() ), peerName.value(), newIdleWorkers );
+			if ( newIdleWorkers != 0 ) {
+				mIdlePeers[ peerName.value() ] = newIdleWorkers;
+			} else {
+				mIdlePeers.erase( peerName.value() );
+			}
+		} else {
+			spdlog::debug( "New subscription from [{}, {}]", peerName.value(), newIdleWorkers );
+			if ( newIdleWorkers != 0 ) {
+				mIdlePeers[ peerName.value() ] = newIdleWorkers;
+			}
 		}
 	}
 }

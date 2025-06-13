@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include <zmq.hpp>
+#include <zmq_addon.hpp>
 
 class BrokerState {
   public:
@@ -14,16 +15,27 @@ class BrokerState {
 
 	void setupPeers( const std::vector<std::string> &peerNames );
 
-	void run();
+	void add2Poller( zmq::active_poller_t &poller );
 
-  private:
 	void broadcastMyState();
 
+	void addIdleWorker( std::string_view name );
+
+	[[nodiscard]] bool isLocalWorkerAvailable();
+
+	[[nodiscard]] std::string getLocalWorker();
+
+	[[nodiscard]] bool isRemotePeerAvailable();
+
+	[[nodiscard]] std::string getRemotePeer();
+
+  private:
+	void handleStateUpdate();
 	std::string mMyId;
 	zmq::socket_t mStateBackend;
 	zmq::socket_t mStateFrontend;
 	std::queue<std::string> mMyIdleWorkers;
-	std::unordered_map<std::string, uint32_t> mOtherIdleWorkers;
+	std::unordered_map<std::string, uint32_t> mIdlePeers;
 };
 
 #endif
