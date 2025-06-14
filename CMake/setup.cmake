@@ -1,5 +1,6 @@
 # Set the C++ standard and require it
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Create compile_commands.json to be used by clangd
