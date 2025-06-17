@@ -40,6 +40,7 @@ namespace {
 			return;
 		}
 		auto frames = rawFrames.value();
+		ZmqUtil::dump( frames );
 		if ( frames.size() == 1 ) {
 			// heartbeat frame
 			if ( frames.front() == "heartbeat" ) {
