@@ -102,25 +102,9 @@ namespace ZmqUtil {
 				std::cerr << "Error in receiving message." << std::endl;
 				return;
 			}
-			std::string raw( static_cast<char *>( message.data() ), size.value() );
-			bool isText{ true };
-			for ( size_t i = 0; i < size.value(); i++ ) {
-				if ( raw[ i ] < 32 || raw[ i ] > 127 ) {
-					isText = false;
-					break;
-				}
-			}
-			if ( isText ) {
-				std::cout << std::format( "[{:<}]	{}\n", size.value(), raw );
-			} else {
-				auto out = std::format( "[{:<}]	", size.value() );
-				for ( size_t i = 0; i < size.value(); i++ ) {
-					out += std::format( "{0:2X}", static_cast<unsigned char>( raw[ i ] ) );
-				}
-				out += "\n";
-				std::cout << out;
-			}
-
+			std::vector<uint8_t> frame;
+			std::memcpy( frame.data(), message.data(), size.value() );
+			dump( frame );
 			auto more = socket.get( zmq::sockopt::rcvmore );
 			if ( !more ) {
 				break;
