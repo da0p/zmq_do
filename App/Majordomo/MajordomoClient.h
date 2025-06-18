@@ -9,7 +9,7 @@
 #include <zmq.hpp>
 #include <zmq_addon.hpp>
 
-#include <Common.h>
+#include <MajordomoClientData.h>
 
 class MajordomoClient {
   public:
@@ -17,10 +17,10 @@ class MajordomoClient {
 
 	void stop();
 	void connect();
-	std::optional<Reply> send( const std::string &service,
-	                           const std::vector<uint8_t> &messageBody,
-	                           std::chrono::milliseconds timeout,
-	                           uint32_t retries );
+	std::optional<MajordomoClientCmd::Reply> send( const std::string &service,
+	                                               const std::vector<uint8_t> &messageBody,
+	                                               std::chrono::milliseconds timeout,
+	                                               uint32_t retries );
 
   private:
 	void handleResponse();
@@ -30,7 +30,7 @@ class MajordomoClient {
 	std::string mBrokerAddr;
 	std::unique_ptr<zmq::socket_t> mSocket;
 	std::atomic_bool mIsRunning{ false };
-	std::optional<Reply> mReply;
+	std::optional<MajordomoClientCmd::Reply> mReply;
 };
 
 #endif

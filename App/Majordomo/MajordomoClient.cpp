@@ -1,4 +1,5 @@
 #include "MajordomoClient.h"
+#include "MajordomoClientData.h"
 #include "ZmqUtil.h"
 
 #include <chrono>
@@ -38,26 +39,26 @@ void MajordomoClient::handleResponse() {
 		spdlog::error( "Failed to receive frames!" );
 		return;
 	}
-	mReply = toReply( rawFrames.value() );
+	mReply = MajordomoClientCmd::Reply::from( rawFrames.value() );
 	if ( !mReply.has_value() ) {
 		spdlog::error( "Failed to parse reply" );
 		return;
 	}
-	spdlog::info( "Received reply: version: {}, clientAddr: {}", mReply.value().version, mReply.value().clientAddr );
+	spdlog::info( "Received reply: version: {}, serviceName: {}", mReply.value().version, mReply.value().serviceName );
 	ZmqUtil::dump( mReply.value().body );
 	// we finished! yayay
 	mIsRunning = false;
 }
 
-std::optional<Reply> MajordomoClient::send( const std::string &service,
-                                            const std::vector<uint8_t> &messageBody,
-                                            std::chrono::milliseconds timeout,
-                                            uint32_t retries ) {
-	Request request{ .version = gMajVer, .clientAddr = service, .body = messageBody };
+std::optional<MajordomoClientCmd::Reply> MajordomoClient::send( const std::string &service,
+                                                                const std::vector<uint8_t> &messageBody,
+                                                                std::chrono::milliseconds timeout,
+                                                                uint32_t retries ) {
+	MajordomoClientCmd::Request request{ gMajVer, service, messageBody };
 	uint32_t currentRetries = 0;
 	mIsRunning = true;
 	while ( currentRetries < retries && mIsRunning ) {
-		ZmqUtil::sendAllFrames( *mSocket, toFrames( request ) );
+		ZmqUtil::sendAllFrames( *mSocket, MajordomoClientCmd::Request::to( request ) );
 		auto evt = mPoller.wait( timeout );
 		if ( !evt ) {
 			currentRetries++;
