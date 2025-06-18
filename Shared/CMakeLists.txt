@@ -1,3 +1,4 @@
 add_subdirectory(RandomNumber)
+add_subdirectory(RandomString)
 add_subdirectory(Util)
 add_subdirectory(StopTimer)
