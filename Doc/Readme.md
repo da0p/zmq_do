@@ -45,3 +45,33 @@ we can stick a ROUTER; we just need to manage identities ourselves
   as the **REQ** socket 
 - **DEALER** socket is fully asynchronous, it can send multiple request before
   receiving a reply, not like **REQ** socket
+
+# Reliable Request-Reply Pattern
+
+There are several request-reply patterns, all of them require require the usage
+of heartbeat. The reason for it is due ot the fact that TCP has a long timeout
+(30 minutes or so), and it is impossible to know whether a peer has died or been
+disconnected.
+
+## No Heartbeat Approach
+
+- When a **ROUTER** socket is used in an application to track peers, as peers
+  disconnect and reconnect, the application will leak memory and get slower
+- When a **SUB** or **DEALER** is used, there is no way to tell whether the
+  peer died
+- If we use a TCP connection that stays silent for a while, it will, in some
+  networks, just die. Sending something will keep the network alive
+
+## One-way Heartbeats
+
+- Food for PUB-SUB, only PUB should send heartbeats to SUB
+- Can be inaccurate when a large amount of data is sent, as heartbeats will be
+  delayed behind that data. Better to treat data also as a heartbeat
+- PUB-SUB will drop messages for disappeared recipients, however, PUSH and DEALER
+  will queue them. So if you send heartbeats to a dead peer and it comes back, it
+  will get all the heartbeats you sent!
+
+## Ping-Pong Heartbeats
+
+- One peer seens a ping command to the other, which replies with a pong command.
+  Neither command has any payload. Usually the client pings the server
