@@ -40,8 +40,8 @@ void MajordomoBroker::handleClientRequest() {
 	}
 
 	auto request = rawRequest.value();
-	if ( mServices.contains( request.serviceName ) ) {
-		spdlog::warn( "Service does not exist or not registered!" );
+	if ( !mServices.contains( request.serviceName ) ) {
+		spdlog::warn( "Service {} does not exist or not registered!", request.serviceName );
 		return;
 	}
 
@@ -66,6 +66,7 @@ void MajordomoBroker::forward2Worker( const PendingRequest &request, const std::
 	MajordomoWorkerCmd::Frames frames{ workerIdentity };
 
 	std::copy( requestCommand.begin(), requestCommand.end(), std::back_inserter( frames ) );
+	spdlog::debug( "forward request to worker: {}", workerId );
 	ZmqUtil::sendAllFrames( *mBackSocket, frames );
 }
 
@@ -106,7 +107,7 @@ void MajordomoBroker::handleCmd( MajordomoWorkerCmd::MessageType msgType,
 			handleReady( workerIdentity, frames );
 			break;
 		case MajordomoWorkerCmd::MessageType::Reply:
-			//handleReply( workerIdentity, frames );
+			handleReply( workerIdentity, frames );
 			break;
 		case MajordomoWorkerCmd::MessageType::Request:
 		case MajordomoWorkerCmd::MessageType::Disconnect:
@@ -114,6 +115,36 @@ void MajordomoBroker::handleCmd( MajordomoWorkerCmd::MessageType msgType,
 			spdlog::error( "Invalid command response received!" );
 			break;
 	}
+}
+
+void MajordomoBroker::handleReply( const std::string &workerIdentity, const MajordomoWorkerCmd::Frames &frames ) {
+	auto rawWorkerReply = MajordomoWorkerCmd::Reply::from( frames );
+	if ( !rawWorkerReply.has_value() ) {
+		spdlog::error( "Failed to parse reply message" );
+		return;
+	}
+
+	if ( !mRegisteredWorkers.contains( workerIdentity ) ) {
+		spdlog::warn( "Received a reply from unregistered worker: {}", workerIdentity );
+		return;
+	}
+	auto &serviceName = mRegisteredWorkers.at( workerIdentity ).serviceName;
+	if ( !mServices.contains( serviceName ) ) {
+		spdlog::error( "No service: `{}`", serviceName );
+		return;
+	}
+
+	// return this worker to the pool
+	mServices.at( serviceName ).idleWorkers.push_back( workerIdentity );
+
+	auto workerReply = rawWorkerReply.value();
+	MajordomoClientCmd::Reply clientReply{ workerReply.version, serviceName, workerReply.body };
+	MajordomoClientCmd::Frames clientReplyFrames = MajordomoClientCmd::Reply::to( clientReply );
+
+	MajordomoClientCmd::Frame routingId{ workerReply.clientAddr.begin(), workerReply.clientAddr.end() };
+	MajordomoClientCmd::Frames replyFrames{ routingId };
+	std::copy( clientReplyFrames.begin(), clientReplyFrames.end(), std::back_inserter( replyFrames ) );
+	ZmqUtil::sendAllFrames( *mFrontSocket, replyFrames );
 }
 
 void MajordomoBroker::handleHeartbeat( const std::string &workerIdentity, const MajordomoWorkerCmd::Frames &frames ) {
@@ -127,7 +158,7 @@ void MajordomoBroker::handleHeartbeat( const std::string &workerIdentity, const 
 
 void MajordomoBroker::refreshHeartbeat( const std::string &workerIdentity ) {
 	if ( mRegisteredWorkers.contains( workerIdentity ) ) {
-		spdlog::info( "Refresh heartbeat for worker: {}", workerIdentity );
+		spdlog::debug( "Refresh heartbeat for worker: {}", workerIdentity );
 		mRegisteredWorkers[ workerIdentity ].expiry = std::chrono::steady_clock::now() + gWorkerHeartbeatExpiryDuration;
 	} else {
 		spdlog::warn( "Received heartbeat from unknown worker: workerId = {}", workerIdentity );
@@ -145,6 +176,7 @@ void MajordomoBroker::handleReady( const std::string &workerId, const MajordomoW
 	Worker worker{ .identity = workerId,
 		           .expiry = std::chrono::steady_clock::now() + gWorkerHeartbeatExpiryDuration,
 		           .serviceName = ready.serviceName };
+	spdlog::info( "Register worker `{}` for service `{}`", workerId, ready.serviceName );
 	mRegisteredWorkers[ workerId ] = worker;
 	mServices[ ready.serviceName ].idleWorkers.push_back( workerId );
 }
@@ -169,7 +201,7 @@ void MajordomoBroker::purgeExpiredWorker() {
 	}
 
 	for ( const auto &worker : expiredWorker ) {
-		spdlog::info( "Purge expired worker: {}", worker.identity );
+		spdlog::debug( "Purge expired worker: {}", worker.identity );
 		mRegisteredWorkers.erase( worker.identity );
 		std::erase_if( mServices[ worker.serviceName ].idleWorkers,
 		               [ &worker ]( auto &&workerId ) { return workerId == worker.identity; } );

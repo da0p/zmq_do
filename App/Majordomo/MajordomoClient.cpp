@@ -42,10 +42,10 @@ void MajordomoClient::handleResponse() {
 	mReply = MajordomoClientCmd::Reply::from( rawFrames.value() );
 	if ( !mReply.has_value() ) {
 		spdlog::error( "Failed to parse reply" );
+		ZmqUtil::dump( rawFrames.value() );
 		return;
 	}
 	spdlog::info( "Received reply: version: {}, serviceName: {}", mReply.value().version, mReply.value().serviceName );
-	ZmqUtil::dump( mReply.value().body );
 	// we finished! yayay
 	mIsRunning = false;
 }

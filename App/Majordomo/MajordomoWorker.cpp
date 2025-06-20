@@ -92,6 +92,7 @@ void MajordomoWorker::handleRequest( const MajordomoWorkerCmd::Frames &frames ) 
 		MajordomoWorkerCmd::Reply reply{ .version = request.value().version,
 			                             .clientAddr = request.value().clientAddr,
 			                             .body = request.value().body };
+		spdlog::info( "Send reply back to client: {}", reply.clientAddr );
 		ZmqUtil::sendAllFrames( *mSocket, MajordomoWorkerCmd::Reply::to( reply ) );
 	}
 }

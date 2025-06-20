@@ -64,7 +64,7 @@ class MajordomoBroker {
 
 	void handleReady( const std::string &workerIdentity, const MajordomoWorkerCmd::Frames &frames );
 
-	//void handleReply( const std::string &workerIdentity, const MajordomoWorkerCmd::Frames &frames );
+	void handleReply( const std::string &workerIdentity, const MajordomoWorkerCmd::Frames &frames );
 
 	zmq::context_t mZmqCtx{ 1 };
 	std::atomic_bool mIsRunning{ false };

@@ -50,18 +50,14 @@ namespace MajordomoClientCmd {
 
 	struct Reply : BaseCmd {
 		static inline std::optional<Reply> from( const Frames &frames ) {
-			if ( frames.size() != 4 ) {
-				return {};
-			}
-
-			if ( !frames[ 0 ].empty() ) {
+			if ( frames.size() != 3 ) {
 				return {};
 			}
 
 			Reply reply;
-			std::copy( frames[ 1 ].begin(), frames[ 1 ].end(), std::back_inserter( reply.version ) );
-			std::copy( frames[ 2 ].begin(), frames[ 2 ].end(), std::back_inserter( reply.serviceName ) );
-			reply.body = frames[ 3 ];
+			std::copy( frames[ 0 ].begin(), frames[ 0 ].end(), std::back_inserter( reply.version ) );
+			std::copy( frames[ 1 ].begin(), frames[ 1 ].end(), std::back_inserter( reply.serviceName ) );
+			reply.body = frames[ 2 ];
 
 			return reply;
 		}
