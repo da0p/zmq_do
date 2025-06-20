@@ -9,6 +9,7 @@ target_link_libraries(MajordomoClient
     spdlog::spdlog
     ZmqUtil
     RandomString
+    StopTimer
 )
 
 target_include_directories(MajordomoClient
