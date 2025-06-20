@@ -55,8 +55,8 @@ namespace ZmqUtil {
 		zmq::message_t message;
 		auto rcv = socket.recv( message, flag );
 		if ( rcv >= 0 ) {
-			std::vector<uint8_t> frame;
-			std::memcpy( frame.data(), message.data(), message.size() );
+			std::vector<uint8_t> frame{ static_cast<uint8_t *>( message.data() ),
+				                        static_cast<uint8_t *>( message.data() ) + rcv.value() };
 			return frame;
 		}
 		return {};
@@ -102,8 +102,8 @@ namespace ZmqUtil {
 				std::cerr << "Error in receiving message." << std::endl;
 				return;
 			}
-			std::vector<uint8_t> frame;
-			std::memcpy( frame.data(), message.data(), size.value() );
+			std::vector<uint8_t> frame{ static_cast<uint8_t *>( message.data() ),
+				                        static_cast<uint8_t *>( message.data() ) + size.value() };
 			dump( frame );
 			auto more = socket.get( zmq::sockopt::rcvmore );
 			if ( !more ) {
