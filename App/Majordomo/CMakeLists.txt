@@ -33,3 +33,21 @@ target_include_directories(MajordomoWorker
   PRIVATE
     ./
 )
+
+add_executable(MajordomoBroker
+  Broker.cpp
+  MajordomoBroker.cpp
+)
+
+target_link_libraries(MajordomoBroker
+  PRIVATE
+    cppzmq
+    spdlog::spdlog
+    ZmqUtil
+    RandomString
+)
+
+target_include_directories(MajordomoBroker
+  PRIVATE
+    ./
+)

@@ -50,15 +50,17 @@ void MajordomoWorker::handleIncomingMessage() {
 		return;
 	}
 	auto frames = rawFrames.value();
-	ZmqUtil::dump( frames );
 	mMissingHeartbeat = 0;
 	if ( frames.size() < 3 ) {
 		spdlog::error( "Invalid message received!" );
+		ZmqUtil::dump( frames );
 		return;
 	}
 
 	if ( frames[ 2 ].size() != 1 ) {
 		spdlog::error( "Invalid message type received!" );
+		ZmqUtil::dump( frames );
+		return;
 	}
 
 	handleCmd( static_cast<MajordomoWorkerCmd::MessageType>( frames[ 2 ].front() ), frames );
@@ -75,6 +77,7 @@ void MajordomoWorker::handleCmd( MajordomoWorkerCmd::MessageType msgType, const 
 		case MajordomoWorkerCmd::MessageType::Heartbeat:
 			// we already reset missing heartbeat to 0 whenever a message is
 			// received no need to handle anything here
+			spdlog::info( "Received heartbeat from broker" );
 			break;
 		default:
 			spdlog::error( "Invalid message type received" );
