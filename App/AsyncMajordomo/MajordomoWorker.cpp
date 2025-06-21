@@ -1,4 +1,4 @@
-#include "MajordomoWorkerData.h"
+#include "MajordomoWorkerMessage.h"
 #include "ZmqUtil.h"
 #include <MajordomoWorker.h>
 
@@ -37,8 +37,8 @@ void MajordomoWorker::connect() {
 	mSocket->connect( mRemoteAddr );
 
 	spdlog::info( "Sending `ready` message" );
-	MajordomoWorkerCmd::Ready ready{ .version = gMajVer, .serviceName = mService };
-	ZmqUtil::sendAllFrames( *mSocket, MajordomoWorkerCmd::Ready::to( ready ) );
+	MajordomoWorkerMessage::Ready ready{ .version = gMajVer, .serviceName = mService };
+	ZmqUtil::sendAllFrames( *mSocket, MajordomoWorkerMessage::Ready::to( ready ) );
 	mHeartbeatDeadline = std::chrono::steady_clock::now() + mSelfHeartbeatPeriod;
 	mMissingHeartbeat = 0;
 }
@@ -63,18 +63,18 @@ void MajordomoWorker::handleIncomingMessage() {
 		return;
 	}
 
-	handleCmd( static_cast<MajordomoWorkerCmd::MessageType>( frames[ 2 ].front() ), frames );
+	handleCmd( static_cast<MajordomoWorkerMessage::MessageType>( frames[ 2 ].front() ), frames );
 }
 
-void MajordomoWorker::handleCmd( MajordomoWorkerCmd::MessageType msgType, const MajordomoWorkerCmd::Frames &frames ) {
+void MajordomoWorker::handleCmd( MajordomoWorkerMessage::MessageType msgType, const MajordomoWorkerMessage::Frames &frames ) {
 	switch ( msgType ) {
-		case MajordomoWorkerCmd::MessageType::Request:
+		case MajordomoWorkerMessage::MessageType::Request:
 			handleRequest( frames );
 			break;
-		case MajordomoWorkerCmd::MessageType::Disconnect:
+		case MajordomoWorkerMessage::MessageType::Disconnect:
 			connect();
 			break;
-		case MajordomoWorkerCmd::MessageType::Heartbeat:
+		case MajordomoWorkerMessage::MessageType::Heartbeat:
 			// we already reset missing heartbeat to 0 whenever a message is
 			// received no need to handle anything here
 			spdlog::info( "Received heartbeat from broker" );
@@ -85,16 +85,16 @@ void MajordomoWorker::handleCmd( MajordomoWorkerCmd::MessageType msgType, const 
 	}
 }
 
-void MajordomoWorker::handleRequest( const MajordomoWorkerCmd::Frames &frames ) {
+void MajordomoWorker::handleRequest( const MajordomoWorkerMessage::Frames &frames ) {
 	// echo!!!
 	// ZmqUtil::dump( frames );
-	auto request = MajordomoWorkerCmd::Request::from( frames );
+	auto request = MajordomoWorkerMessage::Request::from( frames );
 	if ( request.has_value() ) {
-		MajordomoWorkerCmd::Reply reply{ .version = request.value().version,
-			                             .clientAddr = request.value().clientAddr,
-			                             .body = request.value().body };
+		MajordomoWorkerMessage::Reply reply{ .version = request.value().version,
+			                                 .clientAddr = request.value().clientAddr,
+			                                 .body = request.value().body };
 		spdlog::info( "Send reply back to client: {}", reply.clientAddr );
-		ZmqUtil::sendAllFrames( *mSocket, MajordomoWorkerCmd::Reply::to( reply ) );
+		ZmqUtil::sendAllFrames( *mSocket, MajordomoWorkerMessage::Reply::to( reply ) );
 	}
 }
 
@@ -121,9 +121,9 @@ void MajordomoWorker::checkRemoteHeartbeat() {
 
 void MajordomoWorker::updateHeartbeat() {
 	if ( std::chrono::steady_clock::now() > mHeartbeatDeadline ) {
-		MajordomoWorkerCmd::Heartbeat heartbeat{ .version = gMajVer };
+		MajordomoWorkerMessage::Heartbeat heartbeat{ .version = gMajVer };
 		if ( mSocket ) {
-			ZmqUtil::sendAllFrames( *mSocket, MajordomoWorkerCmd::Heartbeat::to( heartbeat ) );
+			ZmqUtil::sendAllFrames( *mSocket, MajordomoWorkerMessage::Heartbeat::to( heartbeat ) );
 		}
 		mHeartbeatDeadline = std::chrono::steady_clock::now() + mSelfHeartbeatPeriod;
 	}

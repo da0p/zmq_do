@@ -7,7 +7,7 @@
 
 #include <Common.h>
 
-namespace MajordomoWorkerCmd {
+namespace MajordomoWorkerMessage {
 	using Frame = std::vector<uint8_t>;
 	using Frames = std::vector<Frame>;
 

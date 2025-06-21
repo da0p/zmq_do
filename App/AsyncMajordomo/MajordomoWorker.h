@@ -8,7 +8,7 @@
 #include <zmq.hpp>
 #include <zmq_addon.hpp>
 
-#include <MajordomoWorkerData.h>
+#include <MajordomoWorkerMessage.h>
 
 class MajordomoWorker {
   public:
@@ -22,8 +22,8 @@ class MajordomoWorker {
 
   private:
 	void handleIncomingMessage();
-	void handleCmd( MajordomoWorkerCmd::MessageType msgType, const MajordomoWorkerCmd::Frames &frames );
-	void handleRequest( const MajordomoWorkerCmd::Frames &frames );
+	void handleCmd( MajordomoWorkerMessage::MessageType msgType, const MajordomoWorkerMessage::Frames &frames );
+	void handleRequest( const MajordomoWorkerMessage::Frames &frames );
 	void updateHeartbeat();
 	void checkRemoteHeartbeat();
 

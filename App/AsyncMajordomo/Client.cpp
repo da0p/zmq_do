@@ -18,7 +18,7 @@ int main( int argc, char *argv[] ) {
 	StopTimer timer;
 	timer.start();
 	for ( size_t i = 0; i < 100000; i++ ) {
-		maj.send( service, MajordomoClientCmd::from( "HelloWorld" ) );
+		maj.send( service, MajordomoClientMessage::from( "HelloWorld" ) );
 	}
 
 	size_t i = 0;

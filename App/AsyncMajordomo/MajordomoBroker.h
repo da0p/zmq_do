@@ -10,12 +10,12 @@
 #include <zmq.hpp>
 #include <zmq_addon.hpp>
 
-#include <MajordomoClientData.h>
-#include <MajordomoWorkerData.h>
+#include <MajordomoClientMessage.h>
+#include <MajordomoWorkerMessage.h>
 
 struct PendingRequest {
 	std::string clientAddr;
-	MajordomoClientCmd::Request request;
+	MajordomoClientMessage::Request request;
 };
 
 struct Worker {
@@ -54,17 +54,17 @@ class MajordomoBroker {
 
 	void forward2Client();
 
-	void handleCmd( MajordomoWorkerCmd::MessageType msgType,
+	void handleCmd( MajordomoWorkerMessage::MessageType msgType,
 	                const std::string &workerIdentity,
-	                const MajordomoWorkerCmd::Frames &frames );
+	                const MajordomoWorkerMessage::Frames &frames );
 
-	void handleHeartbeat( const std::string &workerIdentity, const MajordomoWorkerCmd::Frames &frames );
+	void handleHeartbeat( const std::string &workerIdentity, const MajordomoWorkerMessage::Frames &frames );
 
 	void refreshHeartbeat( const std::string &workerIdentity );
 
-	void handleReady( const std::string &workerIdentity, const MajordomoWorkerCmd::Frames &frames );
+	void handleReady( const std::string &workerIdentity, const MajordomoWorkerMessage::Frames &frames );
 
-	void handleReply( const std::string &workerIdentity, const MajordomoWorkerCmd::Frames &frames );
+	void handleReply( const std::string &workerIdentity, const MajordomoWorkerMessage::Frames &frames );
 
 	void handleDisconnect( const std::string &workerIdentity );
 

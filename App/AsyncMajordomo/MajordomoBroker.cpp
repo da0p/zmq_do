@@ -5,7 +5,7 @@
 
 #include <ZmqUtil.h>
 
-#include <MajordomoWorkerData.h>
+#include <MajordomoWorkerMessage.h>
 
 MajordomoBroker::MajordomoBroker( const std::string &frontend, const std::string &backend ) :
         mFrontend{ frontend }, mBackend{ backend } {
@@ -33,8 +33,8 @@ void MajordomoBroker::handleClientRequest() {
 
 	// ZmqUtil::dump( rawFrames.value() );
 	std::string clientAddr{ rawFrames.value()[ 0 ].begin(), rawFrames.value()[ 0 ].end() };
-	MajordomoClientCmd::Frames frames{ rawFrames.value().begin() + 1, rawFrames.value().end() };
-	auto rawRequest = MajordomoClientCmd::Request::from( frames );
+	MajordomoClientMessage::Frames frames{ rawFrames.value().begin() + 1, rawFrames.value().end() };
+	auto rawRequest = MajordomoClientMessage::Request::from( frames );
 	if ( !rawRequest.has_value() ) {
 		spdlog::error( "Failed to parse frames!" );
 		ZmqUtil::dump( rawFrames.value() );
@@ -63,8 +63,8 @@ void MajordomoBroker::sendPendingRequests( Service &service ) {
 }
 
 void MajordomoBroker::forward2Worker( const PendingRequest &request, const std::string &workerId ) {
-	MajordomoWorkerCmd::Request forwardedReq{ request.request.version, request.clientAddr, request.request.body };
-	auto requestFrames = MajordomoWorkerCmd::Request::to( forwardedReq, workerId );
+	MajordomoWorkerMessage::Request forwardedReq{ request.request.version, request.clientAddr, request.request.body };
+	auto requestFrames = MajordomoWorkerMessage::Request::to( forwardedReq, workerId );
 	spdlog::debug( "forward request from clientAddr: {} to worker: {}", request.clientAddr, workerId );
 	ZmqUtil::sendAllFrames( *mBackSocket, requestFrames );
 }
@@ -92,26 +92,26 @@ void MajordomoBroker::handleWorkerResponse() {
 		return;
 	}
 
-	handleCmd( static_cast<MajordomoWorkerCmd::MessageType>( frames[ 2 ].front() ), workerIdentity, frames );
+	handleCmd( static_cast<MajordomoWorkerMessage::MessageType>( frames[ 2 ].front() ), workerIdentity, frames );
 }
 
-void MajordomoBroker::handleCmd( MajordomoWorkerCmd::MessageType msgType,
+void MajordomoBroker::handleCmd( MajordomoWorkerMessage::MessageType msgType,
                                  const std::string &workerIdentity,
-                                 const MajordomoWorkerCmd::Frames &frames ) {
+                                 const MajordomoWorkerMessage::Frames &frames ) {
 	switch ( msgType ) {
-		case MajordomoWorkerCmd::MessageType::Heartbeat:
+		case MajordomoWorkerMessage::MessageType::Heartbeat:
 			handleHeartbeat( workerIdentity, frames );
 			break;
-		case MajordomoWorkerCmd::MessageType::Ready:
+		case MajordomoWorkerMessage::MessageType::Ready:
 			handleReady( workerIdentity, frames );
 			break;
-		case MajordomoWorkerCmd::MessageType::Reply:
+		case MajordomoWorkerMessage::MessageType::Reply:
 			handleReply( workerIdentity, frames );
 			break;
-		case MajordomoWorkerCmd::MessageType::Disconnect:
+		case MajordomoWorkerMessage::MessageType::Disconnect:
 			handleDisconnect( workerIdentity );
 			break;
-		case MajordomoWorkerCmd::MessageType::Request:
+		case MajordomoWorkerMessage::MessageType::Request:
 		default:
 			spdlog::error( "Invalid command response received!" );
 			break;
@@ -134,8 +134,8 @@ void MajordomoBroker::handleDisconnect( const std::string &workerIdentity ) {
 	std::erase_if( service.idleWorkers, [ &workerIdentity ]( auto &&workerId ) { return workerIdentity == workerId; } );
 }
 
-void MajordomoBroker::handleReply( const std::string &workerIdentity, const MajordomoWorkerCmd::Frames &frames ) {
-	auto rawWorkerReply = MajordomoWorkerCmd::Reply::from( frames );
+void MajordomoBroker::handleReply( const std::string &workerIdentity, const MajordomoWorkerMessage::Frames &frames ) {
+	auto rawWorkerReply = MajordomoWorkerMessage::Reply::from( frames );
 	if ( !rawWorkerReply.has_value() ) {
 		spdlog::error( "Failed to parse reply message" );
 		return;
@@ -157,15 +157,15 @@ void MajordomoBroker::handleReply( const std::string &workerIdentity, const Majo
 	service.idleWorkers.push_back( workerIdentity );
 
 	auto workerReply = rawWorkerReply.value();
-	MajordomoClientCmd::Reply clientReply{ workerReply.version, serviceName, workerReply.body };
-	MajordomoClientCmd::Frames replyFrames = MajordomoClientCmd::Reply::to( clientReply, workerReply.clientAddr );
+	MajordomoClientMessage::Reply clientReply{ workerReply.version, serviceName, workerReply.body };
+	MajordomoClientMessage::Frames replyFrames = MajordomoClientMessage::Reply::to( clientReply, workerReply.clientAddr );
 	ZmqUtil::sendAllFrames( *mFrontSocket, replyFrames );
 	// send new request if there is any pending
 	sendPendingRequests( service );
 }
 
-void MajordomoBroker::handleHeartbeat( const std::string &workerIdentity, const MajordomoWorkerCmd::Frames &frames ) {
-	auto rawHeartbeat = MajordomoWorkerCmd::Heartbeat::from( frames );
+void MajordomoBroker::handleHeartbeat( const std::string &workerIdentity, const MajordomoWorkerMessage::Frames &frames ) {
+	auto rawHeartbeat = MajordomoWorkerMessage::Heartbeat::from( frames );
 	if ( !rawHeartbeat.has_value() ) {
 		spdlog::error( "Failed to parse heartbeat message!" );
 		return;
@@ -180,8 +180,8 @@ void MajordomoBroker::handleHeartbeat( const std::string &workerIdentity, const 
 }
 
 void MajordomoBroker::disconnect( const std::string &workerIdentity ) {
-	MajordomoWorkerCmd::Disconnect disconnect{ .version = gMajVer };
-	MajordomoWorkerCmd::Frames disconnectFrames = MajordomoWorkerCmd::Disconnect::to( disconnect, workerIdentity );
+	MajordomoWorkerMessage::Disconnect disconnect{ .version = gMajVer };
+	MajordomoWorkerMessage::Frames disconnectFrames = MajordomoWorkerMessage::Disconnect::to( disconnect, workerIdentity );
 	ZmqUtil::sendAllFrames( *mBackSocket, disconnectFrames );
 }
 
@@ -194,8 +194,8 @@ void MajordomoBroker::refreshHeartbeat( const std::string &workerIdentity ) {
 	}
 }
 
-void MajordomoBroker::handleReady( const std::string &workerId, const MajordomoWorkerCmd::Frames &frames ) {
-	auto rawReady = MajordomoWorkerCmd::Ready::from( frames );
+void MajordomoBroker::handleReady( const std::string &workerId, const MajordomoWorkerMessage::Frames &frames ) {
+	auto rawReady = MajordomoWorkerMessage::Ready::from( frames );
 	if ( !rawReady.has_value() ) {
 		spdlog::error( "Failed to parse ready message!" );
 		return;
@@ -245,8 +245,8 @@ void MajordomoBroker::sendHeartbeat() {
 	auto now = std::chrono::steady_clock::now();
 	if ( now > mHeartbeatDeadline ) {
 		for ( const auto &[ workerId, worker ] : mRegisteredWorkers ) {
-			MajordomoWorkerCmd::Heartbeat heartbeat{ .version = gMajVer };
-			auto heartbeatFrames = MajordomoWorkerCmd::Heartbeat::to( heartbeat, workerId );
+			MajordomoWorkerMessage::Heartbeat heartbeat{ .version = gMajVer };
+			auto heartbeatFrames = MajordomoWorkerMessage::Heartbeat::to( heartbeat, workerId );
 			ZmqUtil::sendAllFrames( *mBackSocket, heartbeatFrames );
 		}
 		mHeartbeatDeadline = now + gBrokerHeartbeatInterval;

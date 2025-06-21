@@ -1,5 +1,5 @@
-#ifndef ASYNC_MAJORDOMO_CLIENT_DATA_H_
-#define ASYNC_MAJORDOMO_CLIENT_DATA_H_
+#ifndef ASYNC_MAJORDOMO_CLIENT_MESSAGE_H_
+#define ASYNC_MAJORDOMO_CLIENT_MESSAGE_H_
 
 #include <cstdint>
 #include <iterator>
@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace MajordomoClientCmd {
+namespace MajordomoClientMessage {
 	using Frame = std::vector<uint8_t>;
 	using Frames = std::vector<Frame>;
 

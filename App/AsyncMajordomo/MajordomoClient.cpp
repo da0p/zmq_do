@@ -1,5 +1,5 @@
 #include "MajordomoClient.h"
-#include "MajordomoClientData.h"
+#include "MajordomoClientMessage.h"
 #include "ZmqUtil.h"
 
 #include <chrono>
@@ -39,7 +39,7 @@ void MajordomoClient::handleResponse() {
 		spdlog::error( "Failed to receive frames!" );
 		return;
 	}
-	mReply = MajordomoClientCmd::Reply::from( rawFrames.value() );
+	mReply = MajordomoClientMessage::Reply::from( rawFrames.value() );
 	if ( !mReply.has_value() ) {
 		spdlog::error( "Failed to parse reply" );
 		ZmqUtil::dump( rawFrames.value() );
@@ -51,12 +51,12 @@ void MajordomoClient::handleResponse() {
 }
 
 void MajordomoClient::send( const std::string &service, const std::vector<uint8_t> &messageBody ) {
-	MajordomoClientCmd::Request request{ gMajVer, service, messageBody };
-	ZmqUtil::sendAllFrames( *mSocket, MajordomoClientCmd::Request::to( request ) );
+	MajordomoClientMessage::Request request{ gMajVer, service, messageBody };
+	ZmqUtil::sendAllFrames( *mSocket, MajordomoClientMessage::Request::to( request ) );
 	mIsRunning = true;
 }
 
-std::optional<MajordomoClientCmd::Reply> MajordomoClient::recv( std::chrono::milliseconds timeout ) {
+std::optional<MajordomoClientMessage::Reply> MajordomoClient::recv( std::chrono::milliseconds timeout ) {
 	auto evt = mPoller.wait( timeout );
 	if ( !evt ) {
 		spdlog::warn( "No reply, reconnecting..." );
