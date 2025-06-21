@@ -1,6 +1,7 @@
 add_executable(AsyncMajordomoClient
   Client.cpp
   MajordomoClient.cpp
+  MajordomoClientMessage.cpp
 )
 
 target_link_libraries(AsyncMajordomoClient
@@ -20,6 +21,7 @@ target_include_directories(AsyncMajordomoClient
 add_executable(AsyncMajordomoWorker
   Worker.cpp
   MajordomoWorker.cpp
+  MajordomoWorkerMessage.cpp
 )
 
 target_link_libraries(AsyncMajordomoWorker
@@ -38,6 +40,8 @@ target_include_directories(AsyncMajordomoWorker
 add_executable(AsyncMajordomoBroker
   Broker.cpp
   MajordomoBroker.cpp
+  MajordomoClientMessage.cpp
+  MajordomoWorkerMessage.cpp
 )
 
 target_link_libraries(AsyncMajordomoBroker
