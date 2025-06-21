@@ -21,8 +21,7 @@ namespace ZmqUtil {
 	}
 
 	void sendFrame( zmq::socket_t &socket, const std::vector<uint8_t> &frame, zmq::send_flags flag ) {
-		zmq::message_t message{ frame.size() };
-		std::copy( frame.begin(), frame.end(), static_cast<uint8_t *>( message.data() ) );
+		zmq::message_t message{ frame.begin(), frame.end() };
 		socket.send( message, flag );
 	}
 
