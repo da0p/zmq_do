@@ -22,7 +22,7 @@ namespace ZmqUtil {
 
 	void sendFrame( zmq::socket_t &socket, const std::vector<uint8_t> &frame, zmq::send_flags flag ) {
 		zmq::message_t message{ frame.size() };
-		std::memcpy( message.data(), frame.data(), frame.size() );
+		std::copy( frame.begin(), frame.end(), static_cast<uint8_t *>( message.data() ) );
 		socket.send( message, flag );
 	}
 
@@ -110,12 +110,14 @@ namespace ZmqUtil {
 				break;
 			}
 		}
+		std::cout << "\n\n";
 	}
 
 	void dump( const std::vector<std::vector<uint8_t>> &frames ) {
 		for ( const auto &frame : frames ) {
 			dump( frame );
 		}
+		std::cout << "\n\n";
 	}
 
 	void dump( const std::vector<uint8_t> &frame ) {
@@ -144,5 +146,6 @@ namespace ZmqUtil {
 			std::vector<uint8_t> frame{ message.begin(), message.end() };
 			dump( frame );
 		}
+		std::cout << "\n\n";
 	}
 }
