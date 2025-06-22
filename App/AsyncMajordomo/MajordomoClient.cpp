@@ -39,13 +39,19 @@ void MajordomoClient::handleResponse() {
 		spdlog::error( "Failed to receive frames!" );
 		return;
 	}
-	mReply = MajordomoClientMessage::Reply::from( rawFrames.value() );
-	if ( !mReply.has_value() ) {
-		spdlog::error( "Failed to parse reply" );
-		ZmqUtil::dump( rawFrames.value() );
-		return;
+	auto discovery = MajordomoClientMessage::DiscoveryReply::from( rawFrames.value() );
+	if ( discovery.has_value() ) {
+		spdlog::info(
+		  "Received discovery reply for service={}, status={}", discovery.value().serviceName, discovery.value().status );
+	} else {
+		mReply = MajordomoClientMessage::Reply::from( rawFrames.value() );
+		if ( !mReply.has_value() ) {
+			spdlog::error( "Failed to parse reply" );
+			ZmqUtil::dump( rawFrames.value() );
+			return;
+		}
+		spdlog::info( "Received reply: version: {}, serviceName: {}", mReply.value().version, mReply.value().serviceName );
 	}
-	spdlog::info( "Received reply: version: {}, serviceName: {}", mReply.value().version, mReply.value().serviceName );
 	// we finished! yayay
 	mIsRunning = false;
 }
@@ -54,6 +60,11 @@ void MajordomoClient::send( const std::string &service, const std::vector<uint8_
 	MajordomoClientMessage::Request request{ gMajVer, service, messageBody };
 	ZmqUtil::sendAllFrames( *mSocket, MajordomoClientMessage::Request::to( request ) );
 	mIsRunning = true;
+}
+
+void MajordomoClient::ping( const std::string &service ) {
+	MajordomoClientMessage::DiscoveryRequest request{ .header = gDiscoveryService, .serviceName = service };
+	ZmqUtil::sendAllFrames( *mSocket, MajordomoClientMessage::DiscoveryRequest::to( request ) );
 }
 
 std::optional<MajordomoClientMessage::Reply> MajordomoClient::recv( std::chrono::milliseconds timeout ) {

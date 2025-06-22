@@ -68,6 +68,8 @@ class MajordomoBroker {
 
 	void handleDisconnect( const std::string &workerIdentity );
 
+	void handleDiscovery( const MajordomoClientMessage::DiscoveryRequest &request, const std::string &clientAddr );
+
 	void sendPendingRequests( Service &service );
 
 	void disconnect( const std::string &workerIdentity );

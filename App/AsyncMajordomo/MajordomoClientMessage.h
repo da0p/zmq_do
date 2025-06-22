@@ -10,7 +10,6 @@
 namespace MajordomoClientMessage {
 	using Frame = std::vector<uint8_t>;
 	using Frames = std::vector<Frame>;
-
 	struct BaseCmd {
 		std::string version;
 		std::string serviceName;
@@ -28,6 +27,23 @@ namespace MajordomoClientMessage {
 		static std::optional<Reply> from( const Frames &frames );
 		static Frames to( const Reply &reply );
 		static Frames to( const Reply &reply, const std::string &clientAddr );
+	};
+
+	struct DiscoveryRequest {
+		std::string header;
+		std::string serviceName;
+
+		static std::optional<DiscoveryRequest> from( const Frames &frames );
+		static Frames to( const DiscoveryRequest &discovery );
+	};
+
+	struct DiscoveryReply {
+		std::string header;
+		std::string serviceName;
+		std::string status;
+
+		static std::optional<DiscoveryReply> from( const Frames &frames );
+		static Frames to( const DiscoveryReply &discovery, const std::string &clientAddr );
 	};
 }
 #endif

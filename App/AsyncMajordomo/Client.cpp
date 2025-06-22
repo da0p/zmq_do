@@ -15,6 +15,10 @@ int main( int argc, char *argv[] ) {
 
 	spdlog::set_level( spdlog::level::debug );
 	MajordomoClient maj{ "tcp://localhost:5555" };
+	maj.ping( "echo" );
+	[[maybe_unused]] auto _ = maj.recv( std::chrono::seconds( 2500 ) );
+
+	std::this_thread::sleep_for( std::chrono::seconds( 5 ) );
 	StopTimer timer;
 	timer.start();
 	for ( size_t i = 0; i < 100000; i++ ) {

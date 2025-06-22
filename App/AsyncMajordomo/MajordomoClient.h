@@ -18,6 +18,7 @@ class MajordomoClient {
 	void stop();
 	void connect();
 	void send( const std::string &service, const std::vector<uint8_t> &messageBody );
+	void ping( const std::string &service );
 	std::optional<MajordomoClientMessage::Reply> recv( std::chrono::milliseconds timeout );
 
   private:

@@ -34,22 +34,46 @@ void MajordomoBroker::handleClientRequest() {
 	// ZmqUtil::dump( rawFrames.value() );
 	std::string clientAddr{ rawFrames.value()[ 0 ].begin(), rawFrames.value()[ 0 ].end() };
 	MajordomoClientMessage::Frames frames{ rawFrames.value().begin() + 1, rawFrames.value().end() };
-	auto rawRequest = MajordomoClientMessage::Request::from( frames );
-	if ( !rawRequest.has_value() ) {
-		spdlog::error( "Failed to parse frames!" );
-		ZmqUtil::dump( rawFrames.value() );
-		return;
-	}
+	auto rawRequest = MajordomoClientMessage::DiscoveryRequest::from( frames );
+	if ( rawRequest.has_value() ) {
+		spdlog::info( "Received discovery request for service={}", rawRequest.value().serviceName );
+		handleDiscovery( rawRequest.value(), clientAddr );
+	} else {
+		auto rawRequest = MajordomoClientMessage::Request::from( frames );
+		if ( !rawRequest.has_value() ) {
+			spdlog::error( "Failed to parse frames!" );
+			ZmqUtil::dump( rawFrames.value() );
+			return;
+		}
 
-	auto request = rawRequest.value();
-	if ( !mServices.contains( request.serviceName ) ) {
-		spdlog::warn( "Service {} does not exist or not registered!", request.serviceName );
-		return;
-	}
+		auto request = rawRequest.value();
+		if ( !mServices.contains( request.serviceName ) ) {
+			spdlog::warn( "Service {} does not exist or not registered!", request.serviceName );
+			return;
+		}
 
-	auto &service = mServices.at( request.serviceName );
-	service.pendingRequests.emplace_back( clientAddr, request );
-	sendPendingRequests( service );
+		auto &service = mServices.at( request.serviceName );
+		service.pendingRequests.emplace_back( clientAddr, request );
+		sendPendingRequests( service );
+	}
+}
+
+void MajordomoBroker::handleDiscovery( const MajordomoClientMessage::DiscoveryRequest &request, const std::string &clientAddr ) {
+	if ( mServices.contains( request.serviceName ) ) {
+		// 200 - ok
+		MajordomoClientMessage::DiscoveryReply reply{ .header = gDiscoveryService,
+			                                          .serviceName = request.serviceName,
+			                                          .status = "Ok" };
+		MajordomoClientMessage::Frames frames = MajordomoClientMessage::DiscoveryReply::to( reply, clientAddr );
+		ZmqUtil::sendAllFrames( *mFrontSocket, frames );
+	} else {
+		// 404 - not found
+		MajordomoClientMessage::DiscoveryReply reply{ .header = gDiscoveryService,
+			                                          .serviceName = request.serviceName,
+			                                          .status = "NotFound" };
+		MajordomoClientMessage::Frames frames = MajordomoClientMessage::DiscoveryReply::to( reply, clientAddr );
+		ZmqUtil::sendAllFrames( *mFrontSocket, frames );
+	}
 }
 
 void MajordomoBroker::sendPendingRequests( Service &service ) {
