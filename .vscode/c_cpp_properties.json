@@ -2,7 +2,7 @@
   "configurations": [
     {
       "name": "Linux/X86_64",
-      "intelliSenseMode": "gcc-x64",
+      "intelliSenseMode": "linux-gcc-x64",
       "compilerPath": "/usr/bin/g++",
       "cStandard": "c17",
       "cppStandard": "c++23",
