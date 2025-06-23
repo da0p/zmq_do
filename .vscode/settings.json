@@ -14,10 +14,8 @@
         "-GNinja",
     ],
     "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
-    "clangd.arguments": [
-        "--header-insertion=never"
-    ],
     "files.associations": {
         "vector": "cpp"
-    }
+    },
+    "C_Cpp.intelliSenseEngine": "default"
 }
