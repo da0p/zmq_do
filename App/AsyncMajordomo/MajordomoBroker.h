@@ -39,8 +39,6 @@ class MajordomoBroker {
 
 	void stop();
 
-	void addWorker();
-
 	void purgeExpiredWorker();
 
 	void sendHeartbeat();
@@ -51,8 +49,6 @@ class MajordomoBroker {
 
   private:
 	void forward2Worker( const PendingRequest &request, const std::string &workerId );
-
-	void forward2Client();
 
 	void handleCmd( MajordomoWorkerMessage::MessageType msgType,
 	                const std::string &workerIdentity,

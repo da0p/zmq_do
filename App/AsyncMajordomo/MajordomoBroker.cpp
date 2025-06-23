@@ -34,28 +34,28 @@ void MajordomoBroker::handleClientRequest() {
 	// ZmqUtil::dump( rawFrames.value() );
 	std::string clientAddr{ rawFrames.value()[ 0 ].begin(), rawFrames.value()[ 0 ].end() };
 	MajordomoClientMessage::Frames frames{ rawFrames.value().begin() + 1, rawFrames.value().end() };
-	auto rawRequest = MajordomoClientMessage::DiscoveryRequest::from( frames );
-	if ( rawRequest.has_value() ) {
-		spdlog::info( "Received discovery request for service={}", rawRequest.value().serviceName );
-		handleDiscovery( rawRequest.value(), clientAddr );
-	} else {
-		auto rawRequest = MajordomoClientMessage::Request::from( frames );
-		if ( !rawRequest.has_value() ) {
-			spdlog::error( "Failed to parse frames!" );
-			ZmqUtil::dump( rawFrames.value() );
-			return;
-		}
-
-		auto request = rawRequest.value();
-		if ( !mServices.contains( request.serviceName ) ) {
-			spdlog::warn( "Service {} does not exist or not registered!", request.serviceName );
-			return;
-		}
-
-		auto &service = mServices.at( request.serviceName );
-		service.pendingRequests.emplace_back( clientAddr, request );
-		sendPendingRequests( service );
+	auto discoveryRequest = MajordomoClientMessage::DiscoveryRequest::from( frames );
+	if ( discoveryRequest.has_value() ) {
+		spdlog::info( "Received discovery request for service={}", discoveryRequest.value().serviceName );
+		handleDiscovery( discoveryRequest.value(), clientAddr );
+		return;
 	}
+
+	auto commandRequest = MajordomoClientMessage::Request::from( frames );
+	if ( !commandRequest.has_value() ) {
+		spdlog::error( "Failed to parse frames!" );
+		ZmqUtil::dump( rawFrames.value() );
+		return;
+	}
+
+	if ( !mServices.contains( commandRequest.value().serviceName ) ) {
+		spdlog::warn( "Service {} does not exist or not registered!", commandRequest.value().serviceName );
+		return;
+	}
+
+	auto &service = mServices.at( commandRequest.value().serviceName );
+	service.pendingRequests.emplace_back( clientAddr, commandRequest.value() );
+	sendPendingRequests( service );
 }
 
 void MajordomoBroker::handleDiscovery( const MajordomoClientMessage::DiscoveryRequest &request, const std::string &clientAddr ) {
