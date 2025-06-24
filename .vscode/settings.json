@@ -17,5 +17,6 @@
     "files.associations": {
         "vector": "cpp"
     },
-    "C_Cpp.intelliSenseEngine": "default"
+    "clangd.arguments": ["-header-insertion=never"],
+    "C_Cpp.intelliSenseEngine": "disabled",
 }
