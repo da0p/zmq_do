@@ -2,6 +2,7 @@
 zeromq/4.3.5
 cppzmq/4.10.0
 spdlog/1.15.1
+magic_enum/0.9.7
 
 [generators]
 CMakeDeps
