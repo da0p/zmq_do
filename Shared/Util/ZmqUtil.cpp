@@ -147,4 +147,18 @@ namespace ZmqUtil {
 		}
 		std::cout << "\n\n";
 	}
+
+	void dump( zmq::multipart_t &messages, bool verbose ) {
+		if ( !verbose ) {
+			return;
+		}
+
+		for ( auto &msg : messages ) {
+			std::vector<uint8_t> frame( static_cast<uint8_t *>( msg.data() ),
+			                            static_cast<uint8_t *>( msg.data() ) + msg.size() );
+			dump( frame );
+		}
+
+		std::cout << "\n\n";
+	}
 }

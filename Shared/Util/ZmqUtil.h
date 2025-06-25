@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <zmq.hpp>
+#include <zmq_addon.hpp>
 
 namespace ZmqUtil {
 	void sendString( zmq::socket_t &socket, std::string_view text, zmq::send_flags flag = zmq::send_flags::none );
@@ -21,6 +22,7 @@ namespace ZmqUtil {
 	void dump( const std::vector<std::vector<uint8_t>> &frames );
 	void dump( const std::vector<uint8_t> &frame );
 	void dump( const std::vector<std::string> &messages );
+	void dump( zmq::multipart_t &messages, bool verbose = false );
 };
 
 #endif
